@@ -3,9 +3,23 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type { McpServerConfig } from "./types/index.js";
 import { TOOLS, executeTool } from "./tools/index.js";
+import { createPaymentMiddleware, requiresPayment, getPaymentDetails } from "./x402/index.js";
 
-export function createMcpServer(config: McpServerConfig = {}): McpServer {
-  const { name = "openscan-mcp", version = "0.1.0" } = config;
+interface PaymentEnabledConfig extends McpServerConfig {
+  enablePayments?: boolean;
+  walletAddress?: string;
+}
+
+export function createMcpServer(config: PaymentEnabledConfig = {}): McpServer {
+  const {
+    name = "openscan-mcp",
+    version = "0.1.0",
+    enablePayments = false,
+    walletAddress,
+  } = config;
+
+  const paymentMiddleware =
+    enablePayments && walletAddress ? createPaymentMiddleware(walletAddress) : null;
 
   const server = new McpServer({
     name,
@@ -39,6 +53,33 @@ export function createMcpServer(config: McpServerConfig = {}): McpServer {
         };
       }
 
+      if (paymentMiddleware && requiresPayment(tool.name)) {
+        const paymentHeader = (args.x402_payment as string) || null;
+        const verification = await paymentMiddleware.verifyPayment(
+          tool.name,
+          tool.pricing.priceAtomic,
+          paymentHeader,
+        );
+
+        if (!verification.allowed) {
+          const paymentDetails = getPaymentDetails(tool.name);
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify({
+                  success: false,
+                  error: verification.error || "Payment required",
+                  paymentRequired: true,
+                  challenge: verification.challenge,
+                  paymentDetails,
+                }),
+              },
+            ],
+          };
+        }
+      }
+
       const result = await tool.handler(parseResult.data);
 
       return {
@@ -55,7 +96,7 @@ export function createMcpServer(config: McpServerConfig = {}): McpServer {
   return server;
 }
 
-export async function startStdioServer(config: McpServerConfig = {}): Promise<void> {
+export async function startStdioServer(config: PaymentEnabledConfig = {}): Promise<void> {
   const server = createMcpServer(config);
   const transport = new StdioServerTransport();
 

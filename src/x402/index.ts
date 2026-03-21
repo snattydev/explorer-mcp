@@ -5,6 +5,7 @@ export {
   fromAtomicUnits,
   getToolPricing,
   requiresPayment,
+  getPaymentDetails,
 } from "./pricing.js";
 export {
   parseX402Header,

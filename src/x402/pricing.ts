@@ -114,3 +114,22 @@ export function requiresPayment(toolName: string): boolean {
   const pricing = TOOL_PRICING[toolName];
   return pricing ? !pricing.isFree : true;
 }
+
+/**
+ * Get x402 payment details for response headers
+ * Used by autonomous agents to understand payment requirements
+ */
+export function getPaymentDetails(toolName: string): Record<string, string> | null {
+  const pricing = getToolPricing(toolName);
+  if (!pricing || pricing.isFree) {
+    return null;
+  }
+
+  return {
+    "x-payment-required": "true",
+    "x-payment-amount": pricing.priceAtomic,
+    "x-payment-token": PAYMENT_CONFIG.token.address,
+    "x-payment-network": PAYMENT_CONFIG.chainId.toString(),
+    "x-payment-facilitator": PAYMENT_CONFIG.facilitatorUrl,
+  };
+}
