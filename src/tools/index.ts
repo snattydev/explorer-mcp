@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import type { ToolPricing, ToolResult } from "../types/index.js";
 import { TOOL_PRICING } from "../x402/pricing.js";
+import { logger } from "../logger.js";
 import {
   handleGetAddressInfo,
   handleGetTransaction,
@@ -33,15 +34,20 @@ import {
 } from "./schemas.js";
 
 function createHandler<TSchema extends z.ZodType>(
+  toolName: string,
   schema: TSchema,
   handler: (input: z.output<TSchema>) => Promise<ToolResult> | ToolResult,
 ): (input: unknown) => Promise<ToolResult> | ToolResult {
-  return (input: unknown) => {
+  return async (input: unknown) => {
+    const startTime = Date.now();
     const result = schema.safeParse(input);
     if (!result.success) {
+      logger.tool(toolName, input, false, Date.now() - startTime);
       return { success: false, error: `Invalid input: ${result.error.message}` };
     }
-    return handler(result.data as z.output<TSchema>);
+    const handlerResult = await handler(result.data as z.output<TSchema>);
+    logger.tool(toolName, input, handlerResult.success, Date.now() - startTime);
+    return handlerResult;
   };
 }
 
@@ -70,7 +76,7 @@ export const TOOLS: ToolDefinition[] = [
     description:
       "Get blockchain address information including balance, transaction count, and whether it's a contract. Supports multiple networks.",
     inputSchema: getAddressInfoSchema,
-    handler: createHandler(getAddressInfoSchema, handleGetAddressInfo),
+    handler: createHandler("getAddressInfo", getAddressInfoSchema, handleGetAddressInfo),
     pricing: getPricing("getAddressInfo"),
   },
   {
@@ -78,7 +84,7 @@ export const TOOLS: ToolDefinition[] = [
     description:
       "Get transaction details including sender, receiver, value, gas, status, and receipt information.",
     inputSchema: getTransactionSchema,
-    handler: createHandler(getTransactionSchema, handleGetTransaction),
+    handler: createHandler("getTransaction", getTransactionSchema, handleGetTransaction),
     pricing: getPricing("getTransaction"),
   },
   {
@@ -86,7 +92,11 @@ export const TOOLS: ToolDefinition[] = [
     description:
       "Get detailed execution trace for a transaction. Useful for debugging and understanding contract interactions.",
     inputSchema: getTransactionTraceSchema,
-    handler: createHandler(getTransactionTraceSchema, handleGetTransactionTrace),
+    handler: createHandler(
+      "getTransactionTrace",
+      getTransactionTraceSchema,
+      handleGetTransactionTrace,
+    ),
     pricing: getPricing("getTransactionTrace"),
   },
   {
@@ -94,7 +104,7 @@ export const TOOLS: ToolDefinition[] = [
     description:
       "Get block header and metadata by block number, tag (latest, earliest, pending), or hash.",
     inputSchema: getBlockSchema,
-    handler: createHandler(getBlockSchema, handleGetBlock),
+    handler: createHandler("getBlock", getBlockSchema, handleGetBlock),
     pricing: getPricing("getBlock"),
   },
   {
@@ -102,7 +112,11 @@ export const TOOLS: ToolDefinition[] = [
     description:
       "Get block with full transaction details. More expensive but provides complete transaction data.",
     inputSchema: getBlockWithTransactionsSchema,
-    handler: createHandler(getBlockWithTransactionsSchema, handleGetBlockWithTransactions),
+    handler: createHandler(
+      "getBlockWithTransactions",
+      getBlockWithTransactionsSchema,
+      handleGetBlockWithTransactions,
+    ),
     pricing: getPricing("getBlockWithTransactions"),
   },
   {
@@ -110,49 +124,49 @@ export const TOOLS: ToolDefinition[] = [
     description:
       "Get the most recent blocks from the blockchain. Useful for monitoring chain activity.",
     inputSchema: getLatestBlocksSchema,
-    handler: createHandler(getLatestBlocksSchema, handleGetLatestBlocks),
+    handler: createHandler("getLatestBlocks", getLatestBlocksSchema, handleGetLatestBlocks),
     pricing: getPricing("getLatestBlocks"),
   },
   {
     name: "getNetworkStats",
     description: "Get network statistics including latest block, gas price, and base fee.",
     inputSchema: getNetworkStatsSchema,
-    handler: createHandler(getNetworkStatsSchema, handleGetNetworkStats),
+    handler: createHandler("getNetworkStats", getNetworkStatsSchema, handleGetNetworkStats),
     pricing: getPricing("getNetworkStats"),
   },
   {
     name: "getGasPrices",
     description: "Get current gas price tiers (low, average, high) for transaction planning.",
     inputSchema: getGasPricesSchema,
-    handler: createHandler(getGasPricesSchema, handleGetGasPrices),
+    handler: createHandler("getGasPrices", getGasPricesSchema, handleGetGasPrices),
     pricing: getPricing("getGasPrices"),
   },
   {
     name: "getContractCode",
     description: "Get the deployed bytecode of a contract address.",
     inputSchema: getContractCodeSchema,
-    handler: createHandler(getContractCodeSchema, handleGetContractCode),
+    handler: createHandler("getContractCode", getContractCodeSchema, handleGetContractCode),
     pricing: getPricing("getContractCode"),
   },
   {
     name: "callContract",
     description: "Execute a read-only contract call. Requires encoded function call data.",
     inputSchema: callContractSchema,
-    handler: createHandler(callContractSchema, handleCallContract),
+    handler: createHandler("callContract", callContractSchema, handleCallContract),
     pricing: getPricing("callContract"),
   },
   {
     name: "searchLogs",
     description: "Search event logs by block range, contract address, and topics.",
     inputSchema: searchLogsSchema,
-    handler: createHandler(searchLogsSchema, handleSearchLogs),
+    handler: createHandler("searchLogs", searchLogsSchema, handleSearchLogs),
     pricing: getPricing("searchLogs"),
   },
   {
     name: "listNetworks",
     description: "List all supported blockchain networks. FREE - no payment required.",
     inputSchema: listNetworksSchema,
-    handler: () => handleListNetworks(),
+    handler: createHandler("listNetworks", listNetworksSchema, () => handleListNetworks()),
     pricing: getPricing("listNetworks"),
   },
   {
@@ -160,7 +174,7 @@ export const TOOLS: ToolDefinition[] = [
     description:
       "Get x402 payment information including pricing for all tools and payment configuration. FREE - no payment required.",
     inputSchema: getPaymentInfoSchema,
-    handler: () => handleGetPaymentInfo(),
+    handler: createHandler("getPaymentInfo", getPaymentInfoSchema, () => handleGetPaymentInfo()),
     pricing: getPricing("getPaymentInfo"),
   },
 ];

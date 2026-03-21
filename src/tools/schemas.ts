@@ -16,7 +16,7 @@ export const blockIdentifierSchema = z.union([
   blockHashSchema,
 ]);
 
-export const networkSchema = z.string().default("avalanche");
+export const networkSchema = z.string().default("avalanche-fuji");
 
 export const getAddressInfoSchema = z.object({
   address: ethereumAddressSchema,

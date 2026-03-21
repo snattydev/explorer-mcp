@@ -1,14 +1,15 @@
 import type { ToolPricing } from "../types/index.js";
 
 export const PAYMENT_CONFIG = {
-  network: "base",
-  chainId: 8453,
+  network: "base-sepolia",
+  chainId: 84532,
   token: {
     symbol: "USDC",
-    address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
     decimals: 6,
   },
   facilitatorUrl: process.env.X402_FACILITATOR_URL || "https://x402.org/facilitator",
+  isTestnet: true,
 } as const;
 
 export function toAtomicUnits(amount: string): string {

@@ -1,60 +1,34 @@
 import type { NetworkConfig } from "../types/index.js";
 
-const AVALANCHE_RPC = process.env.AVALANCHE_RPC_URL || "https://api.avax.network/ext/bc/C/rpc";
-const ETHEREUM_RPC = process.env.ETHEREUM_RPC_URL || "https://eth.llamarpc.com";
-const BASE_RPC = process.env.BASE_RPC_URL || "https://mainnet.base.org";
-const POLYGON_RPC = process.env.POLYGON_RPC_URL || "https://polygon-rpc.com";
-const ARBITRUM_RPC = process.env.ARBITRUM_RPC_URL || "https://arb1.arbitrum.io/rpc";
-const OPTIMISM_RPC = process.env.OPTIMISM_RPC_URL || "https://mainnet.optimism.io";
+const AVALANCHE_FUJI_RPC =
+  process.env.AVALANCHE_FUJI_RPC_URL || "https://api.avax-test.network/ext/bc/C/rpc";
+const SEPOLIA_RPC = process.env.SEPOLIA_RPC_URL || "https://rpc.sepolia.org";
+const BASE_SEPOLIA_RPC = process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org";
 
 export const SUPPORTED_NETWORKS: Record<string, NetworkConfig> = {
-  avalanche: {
-    networkId: "eip155:43114",
-    chainId: 43114,
-    name: "Avalanche C-Chain",
-    rpcUrl: AVALANCHE_RPC,
+  "avalanche-fuji": {
+    networkId: "eip155:43113",
+    chainId: 43113,
+    name: "Avalanche Fuji (Testnet)",
+    rpcUrl: AVALANCHE_FUJI_RPC,
     currency: "AVAX",
-    explorerUrl: "https://snowtrace.io",
+    explorerUrl: "https://testnet.snowtrace.io",
   },
-  ethereum: {
-    networkId: "eip155:1",
-    chainId: 1,
-    name: "Ethereum Mainnet",
-    rpcUrl: ETHEREUM_RPC,
+  sepolia: {
+    networkId: "eip155:11155111",
+    chainId: 11155111,
+    name: "Sepolia (Testnet)",
+    rpcUrl: SEPOLIA_RPC,
     currency: "ETH",
-    explorerUrl: "https://etherscan.io",
+    explorerUrl: "https://sepolia.etherscan.io",
   },
-  base: {
-    networkId: "eip155:8453",
-    chainId: 8453,
-    name: "Base",
-    rpcUrl: BASE_RPC,
+  "base-sepolia": {
+    networkId: "eip155:84532",
+    chainId: 84532,
+    name: "Base Sepolia (Testnet)",
+    rpcUrl: BASE_SEPOLIA_RPC,
     currency: "ETH",
-    explorerUrl: "https://basescan.org",
-  },
-  polygon: {
-    networkId: "eip155:137",
-    chainId: 137,
-    name: "Polygon",
-    rpcUrl: POLYGON_RPC,
-    currency: "MATIC",
-    explorerUrl: "https://polygonscan.com",
-  },
-  arbitrum: {
-    networkId: "eip155:42161",
-    chainId: 42161,
-    name: "Arbitrum One",
-    rpcUrl: ARBITRUM_RPC,
-    currency: "ETH",
-    explorerUrl: "https://arbiscan.io",
-  },
-  optimism: {
-    networkId: "eip155:10",
-    chainId: 10,
-    name: "Optimism",
-    rpcUrl: OPTIMISM_RPC,
-    currency: "ETH",
-    explorerUrl: "https://optimistic.etherscan.io",
+    explorerUrl: "https://sepolia.basescan.org",
   },
 };
 

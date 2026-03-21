@@ -8,6 +8,7 @@ import type {
   TransactionReceipt,
 } from "../types/index.js";
 import { resolveNetwork } from "./networks.js";
+import { logger } from "../logger.js";
 
 let requestId = 0;
 
@@ -26,6 +27,7 @@ async function rpcCall<T>(
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
+  const startTime = Date.now();
 
   try {
     const response = await fetch(rpcUrl, {
@@ -36,21 +38,27 @@ async function rpcCall<T>(
     });
 
     clearTimeout(timeoutId);
+    const duration = Date.now() - startTime;
 
     if (!response.ok) {
+      logger.error("RPC", `Request failed: ${method}`, { status: response.status, rpcUrl });
       throw new Error(`RPC request failed with status ${response.status}`);
     }
 
     const json = (await response.json()) as JsonRpcResponse<T>;
 
     if (json.error) {
+      logger.error("RPC", `Error: ${method}`, json.error);
       throw new Error(`RPC error: ${json.error.message} (code: ${json.error.code})`);
     }
+
+    logger.rpc(method, params, duration);
 
     return json.result as T;
   } catch (error) {
     clearTimeout(timeoutId);
     if (error instanceof Error && error.name === "AbortError") {
+      logger.error("RPC", `Timeout: ${method}`, { timeout });
       throw new Error(`RPC request timed out after ${timeout}ms`);
     }
     throw error;
