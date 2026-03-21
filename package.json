@@ -1,0 +1,46 @@
+{
+  "name": "@openscan/explorer-mcp",
+  "version": "0.1.0",
+  "description": "OpenScan MCP Server - Blockchain explorer access for AI agents via x402 payments",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "openscan-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "format": "biome format",
+    "format:fix": "biome format --write",
+    "lint": "biome lint",
+    "lint:fix": "biome lint --write",
+    "check": "biome check",
+    "stats": "node dist/stats.js"
+  },
+  "keywords": [
+    "mcp",
+    "blockchain",
+    "explorer",
+    "x402",
+    "ai-agents",
+    "avalanche",
+    "ethereum"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.24.0",
+    "zod-to-json-schema": "^3.24.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.0.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
