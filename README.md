@@ -1,0 +1,1 @@
+OpenCode testing mcp integration
