@@ -13,13 +13,20 @@ export function parseX402Header(headerValue: string | null): X402PaymentHeader |
     }
 
     const decoded = JSON.parse(Buffer.from(parts[1], "base64").toString("utf-8"));
+    const authorization = decoded.payload?.authorization ?? decoded.authorization ?? decoded;
+    const signature = decoded.payload?.signature ?? decoded.signature;
+
+    if (!signature || !authorization?.from || !authorization?.amount || !authorization?.token) {
+      return null;
+    }
+
     return {
       payload: parts[1],
-      signature: decoded.signature,
-      payer: decoded.payer,
-      amount: decoded.amount,
-      token: decoded.token,
-      chainId: decoded.chainId,
+      signature,
+      payer: authorization.from,
+      amount: authorization.amount,
+      token: authorization.token,
+      chainId: authorization.chainId,
     };
   } catch {
     return null;
